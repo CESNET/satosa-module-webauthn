@@ -1,0 +1,99 @@
+.flash {
+    color: #63B246;
+}
+
+button.form_button {
+    outline: none;
+    color: white;
+    background-color: #00000000;
+    transition: 0.3s;
+    border-radius: 50px;
+    padding: 10px 20px;
+    border: 2px solid white;
+    font-size: 15px;
+}
+
+button.form_button:hover {
+    background-color: white;
+    color: #000044;
+    cursor: pointer;
+}
+
+a.logout {
+    outline: none;
+    color: white;
+    background-color: #000044;
+    transition: 0.3s;
+    border-radius: 50px;
+    padding: 10px 20px;
+    border: 2px solid white;
+    font-size: 15px;
+    text-decoration: none;
+}
+
+a.logout:hover {
+    background-color: white;
+    color: #000044;
+    cursor: pointer;
+}
+
+button.token_button {
+    margin: 10px;
+    outline: none;
+    color: white;
+    background-color: #00000000;
+    transition: 0.3s;
+    border-radius: 50px;
+    padding: 5px 10px;
+    border: 2px solid white;
+    font-size: 10px;
+}
+
+button.token_button:hover {
+    background-color: white;
+    color: #000044;
+    cursor: pointer;
+}
+
+input.form_input {
+    background-color: #aaa;
+    border-radius: 50px;
+    padding: 5px;
+    text-align: center;
+    color: #00002d;
+    font-size: 25px;
+    border: 0px solid white;
+    outline: none;
+    transition: 0.6s;
+}
+input.form_input:focus, input.form_input:active {
+    background-color: white;
+}
+
+body, h1, h2 {
+    font-family: 'Oswald', sans-serif;
+}
+
+div.box {
+    border-radius: 10px;
+    display:inline-block;
+    padding: 20px 50px;
+    text-align: center;
+    background-color: #00002d;
+}
+
+div.images {
+
+}
+
+tr.token {
+    margin-top: 10px;
+    width: 426px;
+    display: inline-block;
+    border-radius: 10px;
+    background-color: #00002d;
+}
+
+td {
+    margin-left: 10px;
+}

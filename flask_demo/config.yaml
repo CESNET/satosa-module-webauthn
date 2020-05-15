@@ -1,0 +1,17 @@
+mysql:
+  user: root
+  password: password
+  host: localhost
+  database: webauthn
+caller:
+  callback-url: https://ip-78-128-251-71.flt.cloud.muni.cz/account_linking/handle_account_linking
+  public-key: /var/webauthn-module/py_webauthn/flask_demo/public_key.pem
+host:
+  origin: https://ip-78-128-251-141.flt.cloud.muni.cz
+  rp-id: ip-78-128-251-141.flt.cloud.muni.cz
+  turn-off: True
+  turn-off-timeout-seconds: 300
+responses:
+  success: okay
+  failure: nok
+  invalid-request: invalid

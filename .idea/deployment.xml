@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="PublishConfigData" serverName="a">
+    <serverData>
+      <paths name="a">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/var/webauthn-module/py_webauthn" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
+    </serverData>
+  </component>
+</project>

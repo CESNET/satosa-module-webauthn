@@ -1,0 +1,22 @@
+<html>
+<script src="{{ url_for('static', filename='js/lib/base64.js') }}"></script>
+<script src="{{ url_for('static', filename='js/satosa_webauthn.js') }}"></script>
+<link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+<title>SATOSA WebAuthn</title>
+
+<body style="background-color: #000044; text-align: center">
+<h1 style="color: white; margin-top: 80px">SATOSA WebAuthn</h1>
+<div class="box">
+    <h2 style="color: white">Token registration</h2>
+    <form id="register-form" name="register" method="get">
+        <input name="register_username" value="{{ username1 }}" hidden>
+        <input style="margin-top: 20px" onclick="disappear(this)" class="form_input" name="register_display_name"
+               value="Token Name"></input><br>
+        <button class="form_button" style="margin-top: 20px" id="new_register" type="submit">REGISTER</button>
+    </form>
+</div>
+<div>
+    <img style="width: 200px; margin-top: 30px; opacity: 0.7" src="{{ url_for('static', filename='yubico.png') }}">
+</div>
+</body>
+</html>

@@ -1,2 +1,1 @@
-# satosa-module-webauthn
-WebAuthn module for SaToSa
+# python-flask-webauthn

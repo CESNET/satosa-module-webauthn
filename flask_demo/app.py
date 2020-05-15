@@ -1,0 +1,336 @@
+import os
+import sys
+
+from flask import Flask
+from flask import jsonify
+from flask import make_response
+from flask import render_template
+from flask import request
+from flask import session
+from flask import redirect
+from random import randint
+import util
+from jwkest.jwk import rsa_load, RSAKey
+from jwkest.jws import JWS
+from models import Request
+from context import webauthn
+from models import User
+from models import Credential
+from database import Database
+import yaml
+import json
+import time
+from flask_login import LoginManager
+from flask_login import login_required
+from flask_login import login_user
+from flask_login import logout_user
+from flask_login import current_user
+
+app = Flask(__name__)
+sk = os.environ.get('FLASK_SECRET_KEY')
+app.secret_key = b'\xb9\xf0\xd7\xbd\xdd\xf7\xa2\xa5h\xdf\xd2E\x88\xc6\x86*H\xf9\xf63#\xfe\xe7\x0cv\xdb_\xbbB\x12yJ\t3C\xd6J\xdc\x1a*'
+
+login_manager = LoginManager()
+login_manager.init_app(app)
+
+with open("/var/webauthn-module/py_webauthn/flask_demo/config.yaml", "r") as ymlfile:
+    cfg = yaml.load(ymlfile)
+
+database = Database(cfg)
+
+RP_ID = cfg['host']['rp-id']
+RP_NAME = 'webauthn demo localhost'
+ORIGIN = cfg['host']['origin']
+
+TRUST_ANCHOR_DIR = 'trusted_attestation_roots'
+public_key = RSAKey(key=rsa_load(cfg['caller']['public-key']), use="sig", alg="RS256")
+
+
+@login_manager.user_loader
+def load_user(user_id):
+    user = database.get_user(user_id)
+    if not user:
+        return None
+    user.id = user_id
+    return user
+
+
+@app.route('/credentials')
+def credentials_manager():
+    if current_user.is_authenticated:
+        username = current_user.id
+        credentials_array = database.get_credentials(username)
+        is_turned_off = database.is_turned_off(username)
+        return render_template("credentials.html", credentials=credentials_array, username1=username, url=ORIGIN,
+                               turn_off=cfg['host']['turn-off'], timeout=int(cfg['host']['turn-off-timeout-seconds']),
+                               is_off=is_turned_off)
+    return "User not logged in."
+
+
+@app.route('/delete/<cred_id>')
+def credentials_delete(cred_id):
+    if current_user.is_authenticated and len(database.get_credentials(current_user.id)) > 1:
+        database.delete_credential(cred_id)
+        return "success"
+    return "failure"
+
+
+@app.route('/authentication_request/<message>/')
+def authentication_request_get(message):
+    message = JWS().verify_compact(message, keys=[public_key])
+    # todo check whether signed correctly raise BadSignature
+    satosa_request = Request(message)
+    user = database.get_user(satosa_request.userId)
+    if not database.request_exists(satosa_request):
+        database.save_request(satosa_request)
+    else:
+        return "REPLAY ATTACK"
+    if not user:
+        database.save_user(satosa_request.userId)
+        new_user = database.get_user(satosa_request.userId)
+        login_user(new_user)
+        return render_template('satosa_registration_index.html', username1=satosa_request.userId,
+                               redirect_url1=cfg['caller']['callback-url'])
+    if len(database.get_credentials(satosa_request.userId)) == 0:
+        new_user = database.get_user(satosa_request.userId)
+        login_user(new_user)
+        return render_template('satosa_registration_index.html', username1=satosa_request.userId,
+                               redirect_url1=cfg['caller']['callback-url'])
+
+    if cfg['host']['turn-off'] and database.is_turned_off(user.id):
+        database.turn_on(user.id)
+        login_user(user)
+        satosa_request = Request()
+        satosa_request.userId = user.id
+        database.make_success(satosa_request)
+        username = current_user.id
+        credentials_array = database.get_credentials(username)
+        return render_template("credentials.html", credentials=credentials_array, username1=username, url=ORIGIN,
+                               turn_off=cfg['host']['turn-off'], timeout=int(cfg['host']['turn-off-timeout-seconds']))
+    return render_template('satosa_index.html', username1=satosa_request.userId,
+                           redirect_url1=cfg['caller']['callback-url'])
+
+
+@app.route('/request/<message>')
+def get_request_with_key(message):
+    message = JWS().verify_compact(message, keys=[public_key])
+    satosa_request = Request(message)
+    request = database.get_request(satosa_request.nonce)
+    response = ""
+    if not request or request.userId != satosa_request.userId or request.success == 0 or int(request.time) + 300 < int(
+            satosa_request.time):
+        response = cfg['responses']['failure']
+    elif request.success == 1:
+        database.make_invalid(request)
+        response = cfg['responses']['success']
+    elif request.success == 2:
+        response = cfg['responses']['invalid-request']
+    else:
+        response = "error"
+    response_dict = {"result": response, "current_time": str(int(time.time())), "nonce": satosa_request.nonce}
+    return json.dumps(response_dict)
+
+
+# REGISTRATION PART
+
+@app.route('/webauthn_begin_activate', methods=['POST'])
+def webauthn_begin_activate():
+    username = request.form.get('register_username')
+    if not util.validate_username(username):
+        return make_response(jsonify({'fail': 'Invalid username.'}), 401)
+    display_name = request.form.get('register_display_name')
+    user_exists = database.user_exists(username)
+    if not user_exists or not current_user.is_authenticated or not username == current_user.id:
+        return make_response(jsonify({'fail': 'User not logged in.'}), 401)
+
+    if not util.validate_token_name(display_name):
+        return make_response(jsonify({'fail': 'Invalid display name.'}), 401)
+
+    # clear session variables prior to starting a new registration
+    session.pop('register_ukey', None)
+    session.pop('register_username', None)
+    session.pop('register_display_name', None)
+    session.pop('challenge', None)
+
+    session['register_username'] = username
+    session['register_display_name'] = display_name
+
+    challenge = util.generate_challenge(32)
+    ukey = util.generate_ukey()
+    session['challenge'] = challenge.rstrip('=')
+    session['register_ukey'] = ukey
+
+    make_credential_options = webauthn.WebAuthnMakeCredentialOptions(
+        challenge, RP_NAME, RP_ID, ukey, username, display_name,
+        cfg['host']['origin'])
+
+    return jsonify(make_credential_options.registration_dict)
+
+
+@app.route('/verify_credential_info', methods=['POST'])
+def verify_credential_info():
+    challenge = session['challenge']
+    username = session['register_username']
+    display_name = session['register_display_name']
+    ukey = session['register_ukey']
+    user_exists = database.user_exists(username)
+    if not user_exists or not current_user.is_authenticated or not username == current_user.id:
+        return make_response(jsonify({'fail': 'User not logged in.'}), 401)
+
+    registration_response = request.form
+    trust_anchor_dir = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), TRUST_ANCHOR_DIR)
+    trusted_attestation_cert_required = True
+    self_attestation_permitted = True
+    none_attestation_permitted = True
+    webauthn_registration_response = webauthn.WebAuthnRegistrationResponse(
+        RP_ID,
+        ORIGIN,
+        registration_response,
+        challenge,
+        trust_anchor_dir,
+        trusted_attestation_cert_required,
+        self_attestation_permitted,
+        none_attestation_permitted,
+        uv_required=False)  # User Verification
+
+    try:
+        webauthn_credential = webauthn_registration_response.verify()
+    except Exception as e:
+        return jsonify({'fail': 'Registration failed. Error: {}'.format(e)})
+    # Step 17.
+    #
+    # Check that the credentialId is not yet registered to any other user.
+    # If registration is requested for a credential that is already registered
+    # to a different user, the Relying Party SHOULD fail this registration
+    # ceremony, or it MAY decide to accept the registration, e.g. while deleting
+    # the older registration.
+    credential_id_exists = database.credential_exists(webauthn_credential.credential_id)
+    if credential_id_exists:
+        return make_response(
+            jsonify({
+                'fail': 'Credential ID already exists.'
+            }), 401)
+
+    existing_user = database.user_exists(username)
+    credential = Credential()
+    if not existing_user or True:
+        if sys.version_info >= (3, 0):
+            webauthn_credential.credential_id = str(
+                webauthn_credential.credential_id, "utf-8")
+            webauthn_credential.public_key = str(
+                webauthn_credential.public_key, "utf-8")
+        credential.id = randint(1, 100000)
+        credential.ukey = ukey
+        credential.username = username
+        credential.display_name = display_name
+        credential.pub_key = webauthn_credential.public_key
+        credential.credential_id = webauthn_credential.credential_id
+        credential.sign_count = webauthn_credential.sign_count
+        credential.rp_id = RP_ID
+        credential.icon_url = 'https://example.com'
+        database.save_credential(credential)
+        database.turn_on(credential.username)
+    else:
+        return make_response(jsonify({'fail': 'User already exists.'}), 401)
+    satosa_request = Request()
+    satosa_request.userId = credential.username
+    database.make_success(satosa_request)
+    user = database.get_user(credential.username)
+    login_user(user)
+    return jsonify({'success': 'User successfully registered.'})
+
+
+# LOGIN PART
+
+@app.route('/webauthn_begin_assertion', methods=['POST'])
+def webauthn_begin_assertion():
+    username = request.form.get('login_username')
+
+    if not util.validate_username(username):
+        return make_response(jsonify({'fail': 'Invalid username.'}), 401)
+    credentials = database.get_credentials(username)
+    user = database.get_user(username)
+
+    if not user:
+        return make_response(jsonify({'fail': 'User does not exist.'}), 401)
+    session.pop('challenge', None)
+    challenge = util.generate_challenge(32)
+    session['challenge'] = challenge.rstrip('=')
+    webauthn_users = []
+    for credential in credentials:
+        webauthn_users.append(webauthn.WebAuthnUser(
+            credential.ukey, credential.username, credential.display_name, credential.icon_url,
+            credential.credential_id, credential.pub_key, credential.sign_count, credential.rp_id))
+    webauthn_assertion_options = webauthn.WebAuthnAssertionOptions(
+        webauthn_users, challenge)
+
+    return jsonify(webauthn_assertion_options.assertion_dict)
+
+
+@app.route('/verify_assertion', methods=['POST'])
+def verify_assertion():
+    challenge = session.get('challenge')
+    assertion_response = request.form
+    credential_id = assertion_response.get('id')
+    credential = database.get_credential(credential_id)
+    if not credential:
+        return make_response(jsonify({'fail': 'User does not exist.'}), 401)
+
+    webauthn_user = webauthn.WebAuthnUser(
+        credential.ukey, credential.username, credential.display_name, credential.icon_url,
+        credential.credential_id, credential.pub_key, credential.sign_count, credential.rp_id)
+
+    webauthn_assertion_response = webauthn.WebAuthnAssertionResponse(
+        webauthn_user,
+        assertion_response,
+        challenge,
+        ORIGIN,
+        uv_required=False)  # User Verification
+
+    try:
+        sign_count = webauthn_assertion_response.verify()
+    except Exception as e:
+        raise e
+        return jsonify({'fail': 'Assertion failed. Error: {}'.format(e)})
+
+    # Update counter.
+    credential.sign_count = sign_count
+    database.increment_sign_count(credential)
+
+    satosa_request = Request()
+    satosa_request.userId = credential.username
+    database.make_success(satosa_request)
+    user = User()
+    user.id = credential.username
+    login_user(user)
+    return jsonify({'success': 'User successfully logged in.'})
+
+
+@app.route('/logout')
+@login_required
+def logout():
+    logout_user()
+    return redirect(cfg['caller']['callback-url'])
+
+
+@app.route('/turn_off_auth')
+def turn_off_auth():
+    if cfg['host']['turn-off'] and current_user.is_authenticated:
+        username = current_user.id
+        database.turn_off(username)
+        return "off"
+    return "nok"
+
+
+@app.route('/turn_on_auth')
+def turn_on_auth():
+    if cfg['host']['turn-off'] and current_user.is_authenticated:
+        username = current_user.id
+        database.turn_on(username)
+        return "on"
+    return "nok"
+
+
+if __name__ == '__main__':
+    app.run()
