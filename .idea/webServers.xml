@@ -2,12 +2,18 @@
 <project version="4">
   <component name="WebServers">
     <option name="servers">
-      <webServer id="783759c9-4ca7-405c-8958-ffaba670203e" name="a" url="http://78.128.251.141">
-        <fileTransfer host="78.128.251.141" port="22" privateKey="$USER_HOME$/.ssh/id_rsa" accessType="SFTP" keyPair="true">
+      <webServer id="783759c9-4ca7-405c-8958-ffaba670203e" name="a" url="http://78.128.251.17">
+        <fileTransfer accessType="SFTP" host="78.128.251.141" port="22" sshConfigId="2ea86d0a-6384-4489-8b7c-6b6cb1fc1a27" sshConfig="a" keyPair="true">
           <advancedOptions>
             <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
           </advancedOptions>
-          <option name="port" value="22" />
+        </fileTransfer>
+      </webServer>
+      <webServer id="517a97be-53eb-4c47-b2fc-45af4b634dbc" name="new" url="http://78.128.251.17">
+        <fileTransfer accessType="SFTP" host="78.128.251.17" port="22" sshConfigId="a5826054-2e47-4d00-b002-cc1278374b37" sshConfig="ubuntu@78.128.251.17:22 key" keyPair="true">
+          <advancedOptions>
+            <advancedOptions dataProtectionLevel="Private" passiveMode="true" shareSSLContext="true" />
+          </advancedOptions>
         </fileTransfer>
       </webServer>
     </option>

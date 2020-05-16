@@ -9,6 +9,13 @@
           </mappings>
         </serverdata>
       </paths>
+      <paths name="new">
+        <serverdata>
+          <mappings>
+            <mapping deploy="/var/webauthn-module/py_webauthn" local="$PROJECT_DIR$" web="/" />
+          </mappings>
+        </serverdata>
+      </paths>
     </serverData>
   </component>
 </project>

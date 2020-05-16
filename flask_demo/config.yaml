@@ -1,16 +1,30 @@
+#EXAMPLE OF THE CONFIG FILE
+#parameters of the database that you intend to use
 mysql:
   user: root
   password: password
   host: localhost
   database: webauthn
+
+#details of the calling site
 caller:
-  callback-url: https://ip-78-128-251-71.flt.cloud.muni.cz/account_linking/handle_account_linking
+  #url to which the user is redirected after successful authentication
+  callback-url: https://ip-78-128-251-71.flt.cloud.muni.cz/webauthn/process
+  #public key to verify signatures of the calling site
   public-key: /var/webauthn-module/py_webauthn/flask_demo/public_key.pem
+
+#module details
 host:
+  #the url that the module runs under
   origin: https://ip-78-128-251-141.flt.cloud.muni.cz
+  #id of the relying party
   rp-id: ip-78-128-251-141.flt.cloud.muni.cz
+  #whether it is permitted to turn off the authentication for the purpose of registering tokens on a different device
   turn-off: True
+  #the time until the authentication requiring is turned on again
   turn-off-timeout-seconds: 300
+
+#responses that are sent back to the calling party according to the result of the authentication
 responses:
   success: okay
   failure: nok

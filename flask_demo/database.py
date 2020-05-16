@@ -5,6 +5,7 @@ from models import Request
 import time
 import sys
 
+
 class Database:
     def __init__(self, config):
         self.__dbUser = config['mysql']['user']
@@ -67,7 +68,7 @@ class Database:
         credential_id = str(credential_id, "utf-8")
         mydb = self._connect()
         mycursor = mydb.cursor()
-        mycursor.execute("SELECT * FROM credential WHERE credential_id = '" + credential_id + "'")
+        mycursor.execute("SELECT * FROM credential WHERE credential_id = %s", (credential_id,))
         mycursor.fetchall()
         if mycursor.rowcount > 0:
             return True
@@ -76,13 +77,13 @@ class Database:
     def delete_credential(self, cred_id):
         mydb = self._connect()
         mycursor = mydb.cursor()
-        mycursor.execute("DELETE FROM credential WHERE credential_id = '" + cred_id + "'")
+        mycursor.execute("DELETE FROM credential WHERE credential_id = %s", (cred_id,))
         mydb.commit()
 
     def get_credentials(self, username):
         mydb = self._connect()
         mycursor = mydb.cursor(dictionary=True)
-        mycursor.execute("SELECT * FROM credential WHERE username = '" + username + "'")
+        mycursor.execute("SELECT * FROM credential WHERE username = %s", (username,))
         rows = mycursor.fetchall()
         if mycursor.rowcount > 0:
             return self._parse_credentials(rows)
@@ -91,7 +92,7 @@ class Database:
     def get_user(self, username):
         mydb = self._connect()
         mycursor = mydb.cursor(dictionary=True)
-        mycursor.execute("SELECT * FROM user WHERE username = '" + username + "'")
+        mycursor.execute("SELECT * FROM user WHERE username = %s", (username,))
         rows = mycursor.fetchall()
         if mycursor.rowcount > 0:
             return self._parse_user(rows)
@@ -100,7 +101,7 @@ class Database:
     def get_credential(self, credential_id):
         mydb = self._connect()
         mycursor = mydb.cursor(dictionary=True)
-        mycursor.execute("SELECT * FROM credential WHERE credential_id = '" + credential_id + "'")
+        mycursor.execute("SELECT * FROM credential WHERE credential_id = %s", (credential_id,))
         rows = mycursor.fetchall()
         if mycursor.rowcount > 0:
             return self._parse_credential(rows)
@@ -147,39 +148,36 @@ class Database:
     def save_credential(self, credential):
         mydb = self._connect()
         mycursor = mydb.cursor()
-        # raise Exception(type(user.id).__name__ + ";" +type(user.id).__name__ + ";" +type(user.ukey).__name__ + ";" +type(user.credential_id).__name__ + ";" +type(user.pub_key).__name__ + ";" +type(user.sign_count).__name__ + ";" +type(user.username).__name__ + ";" +type(user.rp_id).__name__ + ";" +type(user.icon_url).__name__)
         mycursor.execute(
-            "INSERT INTO credential (id, ukey, credential_id, display_name, pub_key, sign_count, username, rp_id, icon_url) VALUES (" + str(
-                credential.id) + ", '" + str(
-                credential.ukey) + "', '" + credential.credential_id + "', '" + credential.display_name + "', '" + credential.pub_key + "', " + str(
-                credential.sign_count) + ", '" + credential.username + "', '" + credential.rp_id + "', '" + credential.icon_url + "')")
+            "INSERT INTO credential (id, ukey, credential_id, display_name, pub_key, sign_count, username, rp_id, icon_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            (credential.id, str(credential.ukey), credential.credential_id, credential.display_name, credential.pub_key,
+             credential.sign_count, credential.username, credential.rp_id, credential.icon_url))
         mydb.commit()
 
     def save_user(self, username):
         mydb = self._connect()
         mycursor = mydb.cursor()
-        # raise Exception(type(user.id).__name__ + ";" +type(user.id).__name__ + ";" +type(user.ukey).__name__ + ";" +type(user.credential_id).__name__ + ";" +type(user.pub_key).__name__ + ";" +type(user.sign_count).__name__ + ";" +type(user.username).__name__ + ";" +type(user.rp_id).__name__ + ";" +type(user.icon_url).__name__)
-        mycursor.execute("INSERT INTO user (username) VALUES ('" + username + "')")
+        mycursor.execute("INSERT INTO user (username) VALUES (%s)", (username,))
         mydb.commit()
 
     def increment_sign_count(self, user):
         mydb = self._connect()
         mycursor = mydb.cursor()
-        mycursor.execute("UPDATE credential SET sign_count = " + str(
-            user.sign_count) + " WHERE credential_id = '" + user.credential_id + "'")
+        mycursor.execute("UPDATE credential SET sign_count = %s WHERE credential_id = %s",
+                         (user.sign_count, user.credential_id))
         mydb.commit()
 
     def save_request(self, request: Request):
         mydb = self._connect()
         mycursor = mydb.cursor()
-        mycursor.execute("INSERT INTO request (user_id, nonce, time, success) VALUES ('" + str(
-            request.userId) + "' , '" + request.nonce + "', '" + request.time + "', 0)")
+        mycursor.execute("INSERT INTO request (user_id, nonce, time, success) VALUES (%s, %s, %s, 0)",
+                         (str(request.userId), request.nonce, request.time))
         mydb.commit()
 
     def request_exists(self, request: Request):
         mydb = self._connect()
         mycursor = mydb.cursor()
-        mycursor.execute("SELECT * FROM request WHERE nonce = '" + request.nonce + "'")
+        mycursor.execute("SELECT * FROM request WHERE nonce = %s", (request.nonce,))
         mycursor.fetchall()
         if mycursor.rowcount > 0:
             return True
@@ -188,7 +186,7 @@ class Database:
     def get_request(self, nonce):
         mydb = self._connect()
         mycursor = mydb.cursor(dictionary=True)
-        mycursor.execute("SELECT * FROM request WHERE nonce = '" + nonce + "' ORDER BY `id` DESC LIMIT 1")
+        mycursor.execute("SELECT * FROM request WHERE nonce = %s ORDER BY `id` DESC LIMIT 1", (nonce,))
         rows = mycursor.fetchall()
         if mycursor.rowcount > 0:
             return self._parse_request(rows)
@@ -198,14 +196,15 @@ class Database:
         mydb = self._connect()
         mycursor = mydb.cursor()
         mycursor.execute(
-            "UPDATE request SET success = 1 WHERE success != 2 AND user_id = '" + request.userId + "' ORDER BY `id` DESC LIMIT 1")
+            "UPDATE request SET success = 1 WHERE success != 2 AND user_id = %s ORDER BY `id` DESC LIMIT 1",
+            (request.userId,))
         mydb.commit()
 
     def make_invalid(self, request):
         mydb = self._connect()
         mycursor = mydb.cursor()
         mycursor.execute(
-            "UPDATE request SET success = 2 WHERE user_id = '" + request.userId + "' ORDER BY `id` DESC LIMIT 1")
+            "UPDATE request SET success = 2 WHERE user_id = %s ORDER BY `id` DESC LIMIT 1", (request.userId,))
         mydb.commit()
 
     def _parse_request(self, data):
@@ -224,7 +223,7 @@ class Database:
             mydb = self._connect()
             mycursor = mydb.cursor()
             mycursor.execute(
-                "UPDATE user SET turned_off = " + str(current_time) + " WHERE username = '" + username + "'")
+                "UPDATE user SET turned_off = %s WHERE username = %s", (current_time, username))
             mydb.commit()
             return True
         return False
@@ -234,7 +233,7 @@ class Database:
             mydb = self._connect()
             mycursor = mydb.cursor()
             mycursor.execute(
-                "UPDATE user SET turned_off = 0 WHERE username = '" + username + "'")
+                "UPDATE user SET turned_off = 0 WHERE username = %s", (username,))
             mydb.commit()
             return True
         return False

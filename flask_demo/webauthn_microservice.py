@@ -13,29 +13,24 @@ from ..response import Redirect
 import time
 import satosa.logging_util as lu
 logger = logging.getLogger(__name__)
-#THIS FILE IS NOT GOING TO BE A PART OF THIS MODULE AND WILL BE SOON MOVED TO A DIFFERENT REPOSITORY
 
 class Webauthn(ResponseMicroService):
 
     def __init__(self, config, *args, **kwargs):
-        """
-        :type config: satosa.satosa_config.SATOSAConfig
-        :param config: The SATOSA proxy config
-        """
         super().__init__(*args, **kwargs)
         self.redirect_url = config["redirect_url"]
         self.api_url = config["api_url"]
         self.exclude = config["exclude"]
         self.user_id = config["user_identificator"]
         self.conflict_compatibility = config["conflict_compatibility"]
-        self.included_requesters = config["included_requesters"] or []
-        self.excluded_requesters = config["excluded_requesters"] or []
+        self.included_requesters = config.get("included_requesters", [])
+        self.excluded_requesters = config.get("excluded_requesters", [])
         self.signing_key = RSAKey(key=rsa_load(config["private_key"]), use="sig", alg="RS256")
-        self.endpoint = "/handle_account_linking"
+        self.endpoint = "/process"
         self.id_to_attr = config.get("id_to_attr", None)
-        logger.info("Account linking is active")
+        logger.info("Webauthn is active")
 
-    def _handle_al_response(self, context):
+    def _handle_webauthn_response(self, context):
         saved_state = context.state[self.name]
         internal_response = InternalData.from_dict(saved_state)
         message = {"user_id": internal_response[self.user_id], "nonce": internal_response['nonce'], "time": str(int(time.time()))}
@@ -77,12 +72,9 @@ class Webauthn(ResponseMicroService):
             context.state["conflict"] = "0"
 
         if not self.conflict_compatibility and context.state["conflict"] != "0":
-            logger.error("CONFLICT - SP and the Request are in a conflict - authentication could not take place.")
-            raise Exception()
+            raise Exception("CONFLICT - SP and the Request are in a conflict - authentication could not take place.")
 
-        callback_url = "%s/account_linking%s" % (self.base_url, self.endpoint)
         user_id = internal_response[self.user_id]
-        logger.info(callback_url)
         letters = string.ascii_lowercase
         actual_time = str(int(time.time()))
         random_string = actual_time + ''.join(random.choice(letters) for i in range(54))
@@ -95,9 +87,4 @@ class Webauthn(ResponseMicroService):
         return Redirect("%s/%s" % (self.redirect_url + "/" + jws, ""))
 
     def register_endpoints(self):
-        """
-        Register consent module endpoints
-        :rtype: list[(srt, (satosa.context.Context) -> Any)]
-        :return: A list of endpoints bound to a function
-        """
-        return [("^account_linking%s$" % self.endpoint, self._handle_al_response)]
+        return [("^webauthn%s$" % self.endpoint, self._handle_webauthn_response)]

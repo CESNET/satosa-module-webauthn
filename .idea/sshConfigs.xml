@@ -2,8 +2,8 @@
 <project version="4">
   <component name="SshConfigs">
     <configs>
-      <sshConfig host="78.128.251.141" id="b012b16d-291b-4b02-951b-87776f6bfd83" keyPath="$USER_HOME$/.ssh/id_rsa" port="22" customName="a" nameFormat="CUSTOM" username="debian" />
-      <sshConfig host="78.128.251.141" id="bc84fb00-e804-446d-aa83-441acfae8c96" keyPath="$USER_HOME$/.ssh/id_rsa" port="22" customName="a" nameFormat="CUSTOM" username="debian" />
+      <sshConfig host="78.128.251.141" id="2ea86d0a-6384-4489-8b7c-6b6cb1fc1a27" keyPath="$USER_HOME$/.ssh/id_rsa" port="22" customName="a" nameFormat="CUSTOM" username="debian" />
+      <sshConfig host="78.128.251.17" id="a5826054-2e47-4d00-b002-cc1278374b37" keyPath="$USER_HOME$/.ssh/id_rsa" port="22" nameFormat="DESCRIPTIVE" username="ubuntu" />
     </configs>
   </component>
 </project>
