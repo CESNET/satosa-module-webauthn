@@ -1,5 +1,5 @@
 # WebAuthn module
-This is a brief guide to install the WebAuthn module, the guide will be more detailed in the future.
+This is a brief guide describing the installation of the WebAuthn module, the guide will be more detailed in the future.
 
 This module is mainly intended to be used for SATOSA but can be connected to other systems as well.
 
