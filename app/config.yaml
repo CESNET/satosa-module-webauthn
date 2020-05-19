@@ -9,16 +9,16 @@ mysql:
 #details of the calling site
 caller:
   #url to which the user is redirected after successful authentication
-  callback-url: https://ip-78-128-251-71.flt.cloud.muni.cz/webauthn/process
+  callback-url: example.cz/webauthn/process
   #public key to verify signatures of the calling site
-  public-key: /var/webauthn-module/py_webauthn/flask_demo/public_key.pem
+  public-key: /var/webauthn-module/py_webauthn/app/public_key.pem
 
 #module details
 host:
   #the url that the module runs under
-  origin: https://ip-78-128-251-141.flt.cloud.muni.cz
+  origin: https://example.cz
   #id of the relying party
-  rp-id: ip-78-128-251-141.flt.cloud.muni.cz
+  rp-id: example.cz
   #whether it is permitted to turn off the authentication for the purpose of registering tokens on a different device
   turn-off: True
   #the time until the authentication requiring is turned on again

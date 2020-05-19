@@ -1,6 +1,6 @@
 import unittest
 import base64
-from flask_demo import util
+from app import util
 import binascii
 from unittest.mock import patch
 import sys

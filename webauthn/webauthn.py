@@ -804,7 +804,7 @@ class WebAuthnRegistrationResponse(object):
             #
             # NOTE: This needs to be done by the Relying Party by checking the
             #       `credential_id` property of `WebAuthnCredential` against their
-            #       database. See `flask_demo/app.py`.
+            #       database. See `app/app.py`.
 
             # Step 18.
             #

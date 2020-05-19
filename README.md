@@ -31,7 +31,7 @@ The installation is finished.
 
 ## Apache2 sites-enabled example
 ```
-WSGIPythonPath /var/webauthn-module/py_webauthn/flask_demo/venv/:/var/webauthn-module/py_webauthn/flask_demo/venv/lib/python3.5/site-packages
+WSGIPythonPath /var/webauthn-module/py_webauthn/app/venv/:/var/webauthn-module/py_webauthn/app/venv/lib/python3.5/site-packages
 <IfModule mod_ssl.c>
 <VirtualHost *:443>
         WSGIScriptAlias / /var/webauthn-module/app.wsgi
@@ -40,13 +40,10 @@ WSGIPythonPath /var/webauthn-module/py_webauthn/flask_demo/venv/:/var/webauthn-m
         </Directory>
 	ErrorLog ${APACHE_LOG_DIR}/error.log
 	CustomLog ${APACHE_LOG_DIR}/access.log combined
-ServerName ip-78-128-251-141.flt.cloud.muni.cz
-SSLCertificateFile /etc/letsencrypt/live/ip-78-128-251-141.flt.cloud.muni.cz/fullchain.pem
-SSLCertificateKeyFile /etc/letsencrypt/live/ip-78-128-251-141.flt.cloud.muni.cz/privkey.pem
+ServerName example.cz
+SSLCertificateFile /etc/letsencrypt/live/example.cz/fullchain.pem
+SSLCertificateKeyFile /etc/letsencrypt/live/example.cz/privkey.pem
 Include /etc/letsencrypt/options-ssl-apache.conf
 </VirtualHost>
 </IfModule>
 ```
-
-## License
-Will be added

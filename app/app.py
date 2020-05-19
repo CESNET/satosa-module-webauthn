@@ -10,6 +10,7 @@ from flask import session
 from flask import redirect
 from random import randint
 import util
+from jwkest import BadSignature
 from jwkest.jwk import rsa_load, RSAKey
 from jwkest.jws import JWS
 from models import Request
@@ -33,13 +34,13 @@ app.secret_key = b'\xb9\xf0\xd7\xbd\xdd\xf7\xa2\xa5h\xdf\xd2E\x88\xc6\x86*H\xf9\
 login_manager = LoginManager()
 login_manager.init_app(app)
 
-with open("/var/webauthn-module/py_webauthn/flask_demo/config.yaml", "r") as ymlfile:
+with open("/var/webauthn-module/py_webauthn/app/config.yaml", "r") as ymlfile:
     cfg = yaml.load(ymlfile)
 
 database = Database(cfg)
 
 RP_ID = cfg['host']['rp-id']
-RP_NAME = 'webauthn demo localhost'
+RP_NAME = 'webauthn'
 ORIGIN = cfg['host']['origin']
 
 TRUST_ANCHOR_DIR = 'trusted_attestation_roots'
@@ -48,6 +49,9 @@ public_key = RSAKey(key=rsa_load(cfg['caller']['public-key']), use="sig", alg="R
 
 @login_manager.user_loader
 def load_user(user_id):
+    '''
+    The function that loads the user and returns them if they exist, returns None if the user does not exist
+    '''
     user = database.get_user(user_id)
     if not user:
         return None
@@ -57,6 +61,9 @@ def load_user(user_id):
 
 @app.route('/credentials')
 def credentials_manager():
+    '''
+    If the user is logged in, this url path returns the token management page
+    '''
     if current_user.is_authenticated:
         username = current_user.id
         credentials_array = database.get_credentials(username)
@@ -69,6 +76,12 @@ def credentials_manager():
 
 @app.route('/delete/<cred_id>')
 def credentials_delete(cred_id):
+    '''
+    This url path is called when the user
+     intends to delete one of their tokens, the
+      user must be logged in and at least one
+       token must be still registered
+    '''
     if current_user.is_authenticated and len(database.get_credentials(current_user.id)) > 1:
         database.delete_credential(cred_id)
         return "success"
@@ -77,7 +90,13 @@ def credentials_delete(cred_id):
 
 @app.route('/authentication_request/<message>/')
 def authentication_request_get(message):
-    message = JWS().verify_compact(message, keys=[public_key])
+    '''
+    This is the url that other system uses to redirect the user in order to authenticate them
+    '''
+    try:
+        message = JWS().verify_compact(message, keys=[public_key])
+    except BadSignature:
+        return "Signature invalid"
     # todo check whether signed correctly raise BadSignature
     satosa_request = Request(message)
     user = database.get_user(satosa_request.userId)
@@ -113,6 +132,9 @@ def authentication_request_get(message):
 
 @app.route('/request/<message>')
 def get_request_with_key(message):
+    '''
+    This url path is called after authentication took place to check the result of it
+    '''
     message = JWS().verify_compact(message, keys=[public_key])
     satosa_request = Request(message)
     request = database.get_request(satosa_request.nonce)
@@ -135,6 +157,9 @@ def get_request_with_key(message):
 
 @app.route('/webauthn_begin_activate', methods=['POST'])
 def webauthn_begin_activate():
+    '''
+    This url is called when the registration process starts
+    '''
     username = request.form.get('register_username')
     if not util.validate_username(username):
         return make_response(jsonify({'fail': 'Invalid username.'}), 401)
@@ -169,6 +194,9 @@ def webauthn_begin_activate():
 
 @app.route('/verify_credential_info', methods=['POST'])
 def verify_credential_info():
+    '''
+    This url is called to verify and register the token
+    '''
     challenge = session['challenge']
     username = session['register_username']
     display_name = session['register_display_name']
@@ -245,6 +273,9 @@ def verify_credential_info():
 
 @app.route('/webauthn_begin_assertion', methods=['POST'])
 def webauthn_begin_assertion():
+    '''
+    This url is called when the authentication process begins
+    '''
     username = request.form.get('login_username')
 
     if not util.validate_username(username):
@@ -270,6 +301,9 @@ def webauthn_begin_assertion():
 
 @app.route('/verify_assertion', methods=['POST'])
 def verify_assertion():
+    '''
+    This url is called to authenticate the user
+    '''
     challenge = session.get('challenge')
     assertion_response = request.form
     credential_id = assertion_response.get('id')
@@ -316,6 +350,9 @@ def logout():
 
 @app.route('/turn_off_auth')
 def turn_off_auth():
+    '''
+    This url is called to turn off the requiring of authentication
+    '''
     if cfg['host']['turn-off'] and current_user.is_authenticated:
         username = current_user.id
         database.turn_off(username)
@@ -325,6 +362,9 @@ def turn_off_auth():
 
 @app.route('/turn_on_auth')
 def turn_on_auth():
+    '''
+    This url is called to turn on the requiring of the authentication
+    '''
     if cfg['host']['turn-off'] and current_user.is_authenticated:
         username = current_user.id
         database.turn_on(username)

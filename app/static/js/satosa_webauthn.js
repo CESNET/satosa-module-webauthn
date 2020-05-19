@@ -394,21 +394,17 @@ function disappear(el) {
 }
 
 document.addEventListener("DOMContentLoaded", e => {
-    try {
-        document.querySelector('#login').addEventListener('click', didClickLogin);
-    } catch (e) {
+    let buttons = {
+        'login': didClickLogin,
+        'manage': didClickManage,
+        'register': didClickRegister,
+        'new_register': didClickNewRegister
     }
-    try {
-        document.querySelector('#manage').addEventListener('click', didClickManage);
-    } catch (e) {
-    }
-    try {
-        document.querySelector('#register').addEventListener('click', didClickRegister);
-    } catch (e) {
-    }
-    try {
-        document.querySelector('#new_register').addEventListener('click', didClickNewRegister);
-    } catch (e) {
+    for (buttonId in buttons) {
+        let button = document.querySelector('#' + buttonId)
+        if (button !== null) {
+            button.addEventListener('click', buttons[buttonId]);
+        }
     }
 });
 
