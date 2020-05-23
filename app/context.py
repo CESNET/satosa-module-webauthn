@@ -1,3 +1,4 @@
+#Copyright (c) 2017 Duo Security, Inc. All rights reserved.
 import os
 import sys
 

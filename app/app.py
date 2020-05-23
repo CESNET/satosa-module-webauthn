@@ -226,13 +226,6 @@ def verify_credential_info():
         webauthn_credential = webauthn_registration_response.verify()
     except Exception as e:
         return jsonify({'fail': 'Registration failed. Error: {}'.format(e)})
-    # Step 17.
-    #
-    # Check that the credentialId is not yet registered to any other user.
-    # If registration is requested for a credential that is already registered
-    # to a different user, the Relying Party SHOULD fail this registration
-    # ceremony, or it MAY decide to accept the registration, e.g. while deleting
-    # the older registration.
     credential_id_exists = database.credential_exists(webauthn_credential.credential_id)
     if credential_id_exists:
         return make_response(
