@@ -9,6 +9,7 @@ UKEY_DEFAULT_BYTE_LEN = 20
 USERNAME_MAX_LENGTH = 32
 TOKEN_NAME_MAX_LENGTH = 65
 
+
 def validate_username(username):
     if not isinstance(username, six.string_types):
         return True

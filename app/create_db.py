@@ -7,7 +7,3 @@ with open("config.yaml", "r") as ymlfile:
 database = Database(cfg)
 print(database.create_database())
 print("Script finished.")
-
-
-
-

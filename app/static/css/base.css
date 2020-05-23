@@ -66,6 +66,7 @@ input.form_input {
     outline: none;
     transition: 0.6s;
 }
+
 input.form_input:focus, input.form_input:active {
     background-color: white;
 }
@@ -76,7 +77,7 @@ body, h1, h2 {
 
 div.box {
     border-radius: 10px;
-    display:inline-block;
+    display: inline-block;
     padding: 20px 50px;
     text-align: center;
     background-color: #00002d;
