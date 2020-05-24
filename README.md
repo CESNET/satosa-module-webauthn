@@ -19,7 +19,8 @@ This module is mainly intended to be used for SATOSA but can be connected to oth
 
 
 ## Installation
-Installation is described using Apache2 and Ubuntu. 
+Installation is described using Apache2 and Ubuntu. This guide describes installation on a different server than the software that will use it.
+However, you can run this module on the same server as well.
 
 Clone this repository and then properly fill out the `config.yaml` file. The parameters are described in the example file that is provided.
 
