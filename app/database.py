@@ -32,7 +32,7 @@ class Database:
 
         mycursor = mydb.cursor()
         try:
-            mycursor.execute("CREATE DATABASE " + self.__database)
+            mycursor.execute("CREATE DATABASE " + self.__database + " DEFAULT CHARACTER SET = utf8mb4;")
             returned += "Database created.\n"
         except Exception as e:
             returned += str(e) + "\n"
