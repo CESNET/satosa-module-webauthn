@@ -16,7 +16,8 @@ This module is mainly intended to be used for SATOSA but can be connected to oth
 - mysql-connector-python
 - pyjwkest
 
-
+## Installation using Docker
+The link: https://github.com/CESNET/satosa-module-webauthn-docker
 
 ## Installation
 Installation is described using Apache2 and Ubuntu. This guide describes installation on a different server than the software that will use it.
