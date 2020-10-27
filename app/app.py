@@ -26,6 +26,7 @@ from flask_login import login_required
 from flask_login import login_user
 from flask_login import logout_user
 from flask_login import current_user
+from flask_reverse_proxy_fix.middleware import ReverseProxyPrefixFix
 
 app = Flask(__name__)
 sk = os.environ.get('FLASK_SECRET_KEY')
@@ -42,6 +43,10 @@ database = Database(cfg)
 RP_ID = cfg['host']['rp-id']
 RP_NAME = 'webauthn'
 ORIGIN = cfg['host']['origin']
+
+if 'reverse_proxy_path' in cfg:
+    app.config['REVERSE_PROXY_PATH'] = cfg['reverse_proxy_path']
+    ReverseProxyPrefixFix(app)
 
 TRUST_ANCHOR_DIR = 'trusted_attestation_roots'
 public_key = RSAKey(key=rsa_load(cfg['caller']['public-key']), use="sig", alg="RS256")

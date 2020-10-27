@@ -29,3 +29,6 @@ responses:
   success: okay
   failure: nok
   invalid-request: invalid
+
+# if required, specify a prefix handled by reverse proxy
+#reverse_proxy_path: /webauthn
