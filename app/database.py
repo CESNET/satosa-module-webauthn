@@ -41,7 +41,7 @@ class Database:
         mycursor = mydb.cursor()
         try:
             mycursor.execute(
-                "CREATE TABLE `user` (`id` int(8) unsigned NOT NULL AUTO_INCREMENT,`username` varchar(30) NOT NULL,`turned_off` int(20) DEFAULT NULL,PRIMARY KEY (`id`),UNIQUE KEY `username` (`username`))")
+                "CREATE TABLE `user` (`id` int(8) unsigned NOT NULL AUTO_INCREMENT,`username` varchar(255) NOT NULL,`turned_off` int(20) DEFAULT NULL,PRIMARY KEY (`id`),UNIQUE KEY `username` (`username`))")
             returned += "Table user created\n"
         except Exception as e:
             returned += str(e) + "\n"
