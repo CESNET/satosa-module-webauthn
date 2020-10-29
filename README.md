@@ -23,7 +23,7 @@ The link: https://github.com/CESNET/satosa-module-webauthn-docker
 Installation is described using Apache2 and Ubuntu. This guide describes installation on a different server than the software that will use it.
 However, you can run this module on the same server as well.
 
-Clone this repository and then properly fill out the `config.yaml` file. The parameters are described in the example file that is provided.
+Clone this repository and then properly fill out the `config.yaml` file. The parameters are described in the example file that is provided. You also need to set `SECRET_KEY` environment variable to a secret value at runtime.
 
 After you download the system requirements and libraries, you need to add the module to the Apache sites-enabled.
 
