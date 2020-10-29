@@ -87,7 +87,7 @@ def credentials_manager():
     return "User not logged in."
 
 
-@app.route('/delete/<cred_id>')
+@app.route('/delete/<cred_id>', methods=['POST'])
 def credentials_delete(cred_id):
     '''
     This url path is called when the user
@@ -168,7 +168,7 @@ def get_request_with_key(message):
 
 # REGISTRATION PART
 
-@app.route('/webauthn_begin_activate', methods=['POST'])
+@app.route('/begin_activate', methods=['POST'])
 def webauthn_begin_activate():
     '''
     This url is called when the registration process starts
@@ -277,7 +277,7 @@ def verify_credential_info():
 
 # LOGIN PART
 
-@app.route('/webauthn_begin_assertion', methods=['POST'])
+@app.route('/begin_assertion', methods=['POST'])
 def webauthn_begin_assertion():
     '''
     This url is called when the authentication process begins

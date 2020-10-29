@@ -33,30 +33,31 @@ async function fetch_text1(url, options, manage) {
     var returned = ""
     a.text().then((x) => {
         if (manage) {
-            window.location.replace("/credentials");
+            window.location.href = document.getElementById('manage-url').href;
         } else {
-            window.location.replace("/logout");
+            window.location.href = document.getElementById('logout-url').href;
         }
     })
     return returned
 }
 
 /**
- * Get PublicKeyCredentialRequestOptions for this user from the server
- * formData of the registration form
+ * Submit a form
+ * @param {string} url
+ * @param {string} method
  * @param {FormData} formData
  */
-const getCredentialRequestOptionsFromServer = async (formData) => {
+async function submitForm(url, method, formData) {
     return await fetch_json(
-        "/webauthn_begin_assertion",
+        url,
         {
-            method: "POST",
+            method: method.toUpperCase(),
             body: formData
         }
     );
 }
 
-const transformCredentialRequestOptions = (credentialRequestOptionsFromServer) => {
+function transformCredentialRequestOptions(credentialRequestOptionsFromServer) {
     let {challenge, allowCredentials} = credentialRequestOptionsFromServer;
 
     challenge = Uint8Array.from(
@@ -75,20 +76,6 @@ const transformCredentialRequestOptions = (credentialRequestOptionsFromServer) =
         {challenge, allowCredentials});
 
     return transformedCredentialRequestOptions;
-};
-/**
- * Get PublicKeyCredentialRequestOptions for this user from the server
- * formData of the registration form
- * @param {FormData} formData
- */
-const getCredentialCreateOptionsFromServer = async (formData) => {
-    return await fetch_json(
-        "/webauthn_begin_activate",
-        {
-            method: "POST",
-            body: formData
-        }
-    );
 }
 
 /**
@@ -96,7 +83,7 @@ const getCredentialCreateOptionsFromServer = async (formData) => {
  * into byte arrays expected by the navigator.credentials.create() call
  * @param {Object} credentialCreateOptionsFromServer
  */
-const transformCredentialCreateOptions = (credentialCreateOptionsFromServer) => {
+function transformCredentialCreateOptions(credentialCreateOptionsFromServer) {
     let {challenge, user} = credentialCreateOptionsFromServer;
     user.id = Uint8Array.from(
         atob(credentialCreateOptionsFromServer.user.id
@@ -125,7 +112,7 @@ const transformCredentialCreateOptions = (credentialCreateOptionsFromServer) => 
  * for posting to the server.
  * @param {PublicKeyCredential} newAssertion
  */
-const transformNewAssertionForServer = (newAssertion) => {
+function transformNewAssertionForServer(newAssertion) {
     const attObj = new Uint8Array(
         newAssertion.response.attestationObject);
     const clientDataJSON = new Uint8Array(
@@ -145,17 +132,16 @@ const transformNewAssertionForServer = (newAssertion) => {
     };
 }
 
-async function webauthn_register(e) {
-    e.preventDefault();
-
+async function webauthn_register(form) {
     // gather the data in the form
-    const form = document.querySelector('#register-form');
+    const url = form.action;
+    const method = form.method;
     const formData = new FormData(form);
 
     // post the data to the server to generate the PublicKeyCredentialCreateOptions
     let credentialCreateOptionsFromServer;
     try {
-        credentialCreateOptionsFromServer = await getCredentialCreateOptionsFromServer(formData);
+        credentialCreateOptionsFromServer = await submitForm(url, method, formData);
     } catch (err) {
         return console.error("Failed to generate credential request options:", err);
     }
@@ -179,9 +165,11 @@ async function webauthn_register(e) {
     return transformNewAssertionForServer(credential);
 }
 
-async function turn_off() {
-    const timeout = this.dataset.timeout;
-    const response = await fetch("/turn_off_auth");
+async function turn_off(form, event) {
+    event.preventDefault();
+    const timeout = form.dataset.timeout;
+    const url = form.action;
+    const response = await fetch(url);
     var a = response.clone()
     a.text().then((x) => {
         if (x == "off") {
@@ -193,8 +181,10 @@ async function turn_off() {
     })
 }
 
-async function turn_on() {
-    const response = await fetch("/turn_on_auth");
+async function turn_on(form, event) {
+    event.preventDefault();
+    const url = form.action;
+    const response = await fetch(url);
     var a = response.clone()
     a.text().then((x) => {
         if (x == "on") {
@@ -206,16 +196,16 @@ async function turn_on() {
     })
 }
 
-async function webauthn_login(e) {
-    e.preventDefault();
+async function webauthn_login(form) {
     // gather the data in the form
-    const form = document.querySelector('#login-form');
+    const url = form.action;
+    const method = form.method;
     const formData = new FormData(form);
 
     // post the login data to the server to retrieve the PublicKeyCredentialRequestOptions
     let credentialCreateOptionsFromServer;
     try {
-        credentialRequestOptionsFromServer = await getCredentialRequestOptionsFromServer(formData);
+        credentialRequestOptionsFromServer = await submitForm(url, method, formData);
     } catch (err) {
         return console.error("Error when getting request options from server:", err);
     }
@@ -241,40 +231,23 @@ async function webauthn_login(e) {
     return transformAssertionForServer(assertion);
 }
 
-
-const didClickManage = async (e) => {
-    const transformedAssertionForServer = await webauthn_login(e)
-    let response;
+async function loginClickHandler(manage, form, event) {
+    event.preventDefault();
+    const transformedAssertionForServer = await webauthn_login(form);
     try {
-        response = await postAssertionToServer(transformedAssertionForServer, true);
+        await postAssertionToServer(transformedAssertionForServer, manage);
     } catch (err) {
         return console.error("Error when validating assertion on server:", err);
     }
-};
+}
 
-/**
- * Callback executed after submitting login form
- * @param {Event} e
- */
-const didClickLogin = async (e) => {
-
-
-    // post the assertion to the server for verification.
-    const transformedAssertionForServer = await webauthn_login(e)
-    let response;
-    try {
-        response = await postAssertionToServer(transformedAssertionForServer, false);
-    } catch (err) {
-        return console.error("Error when validating assertion on server:", err);
-    }
-};
-
-const didClickRegister = async (e) => {
-    const newAssertionForServer = await webauthn_register(e)
+async function registerClickHandler(form, event) {
+    event.preventDefault();
+    const newAssertionForServer = await webauthn_register(form);
     let assertionValidationResponse;
     try {
         assertionValidationResponse = await postNewAssertionToServer(newAssertionForServer);
-        window.location.replace("/credentials");
+        window.location.href = document.getElementById('manage-url').href;
     } catch (err) {
         alert("Registration failed.")
         return console.error("Server validation of credential failed:", err);
@@ -285,21 +258,22 @@ const didClickRegister = async (e) => {
  * Posts the new credential data to the server for validation and storage.
  * @param {Object} credentialDataForServer
  */
-const postNewAssertionToServer = async (credentialDataForServer) => {
+async function postNewAssertionToServer(credentialDataForServer) {
     const formData = new FormData();
     Object.entries(credentialDataForServer).forEach(([key, value]) => {
         formData.set(key, value);
     });
 
     return await fetch_json(
-        "/verify_credential_info", {
+        document.getElementById('verify-url').href, {
             method: "POST",
             body: formData
         });
 }
 
-const didClickNewRegister = async (e) => {
-    const newAssertionForServer = await webauthn_register(e)
+async function newRegisterClickHandler(form, event) {
+    event.preventDefault();
+    const newAssertionForServer = await webauthn_register(form);
     let assertionValidationResponse;
     try {
         assertionValidationResponse = await postTotallyNewAssertionToServer(newAssertionForServer);
@@ -312,7 +286,7 @@ const didClickNewRegister = async (e) => {
  * Encodes the binary data in the assertion into strings for posting to the server.
  * @param {PublicKeyCredential} newAssertion
  */
-const transformAssertionForServer = (newAssertion) => {
+function transformAssertionForServer(newAssertion) {
     const authData = new Uint8Array(newAssertion.response.authenticatorData);
     const clientDataJSON = new Uint8Array(newAssertion.response.clientDataJSON);
     const rawId = new Uint8Array(newAssertion.rawId);
@@ -328,20 +302,20 @@ const transformAssertionForServer = (newAssertion) => {
         signature: hexEncode(sig),
         assertionClientExtensions: JSON.stringify(assertionClientExtensions)
     };
-};
+}
 
 /**
  * Post the assertion to the server for validation and logging the user in.
  * @param {Object} assertionDataForServer
  */
-const postAssertionToServer = async (assertionDataForServer, manage) => {
+async function postAssertionToServer(assertionDataForServer, manage) {
     const formData = new FormData();
     Object.entries(assertionDataForServer).forEach(([key, value]) => {
         formData.set(key, value);
     });
 
     var result = await fetch_text1(
-        "/verify_assertion", {
+        document.getElementById('assertion-url').href, {
             method: "POST",
             body: formData
         }, manage);
@@ -351,14 +325,14 @@ const postAssertionToServer = async (assertionDataForServer, manage) => {
  * Posts the new credential data to the server for validation and storage.
  * @param {Object} credentialDataForServer
  */
-const postTotallyNewAssertionToServer = async (credentialDataForServer) => {
+async function postTotallyNewAssertionToServer(credentialDataForServer) {
     const formData = new FormData();
     Object.entries(credentialDataForServer).forEach(([key, value]) => {
         formData.set(key, value);
     });
 
     return await fetch_text(
-        "/verify_credential_info", {
+        document.getElementById('verify-url').href, {
             method: "POST",
             body: formData
         });
@@ -369,46 +343,43 @@ async function fetch_text(url, options) {
     var a = response.clone()
     var returned = ""
     a.text().then((x) => {
-        window.location.replace("/logout");
+        window.location.href = document.getElementById('logout-url').href;
     })
     return returned
 }
 
 
-function delete_credential(cred_id) {
-    var url = "/delete/" + cred_id;
-    fetch(url, {method: "GET"});
-    setTimeout(function () {
-        window.location.reload();
-    }, 500)
-}
-
-function tokenButtonClick() {
-    delete_credential(this.id);
+function deleteCredential(event) {
+    event.preventDefault();
+    const url = this.action;
+    const method = this.method;
+    fetch(url, {method: method}).finally(() => {
+        setTimeout(location.reload.bind(location), 500);
+    });
 }
 
 document.addEventListener("DOMContentLoaded", e => {
-    const buttonIds = {
-        'login': didClickLogin,
-        'manage': didClickManage,
-        'register': didClickRegister,
-        'new_register': didClickNewRegister,
-        'turn_off_button': turn_off,
-        'turn_on_button': turn_on
+    const formIds = {
+        'manage-form': loginClickHandler.bind(null, true),
+        'login-form': loginClickHandler.bind(null, false),
+        'turn_off_form': turn_off,
+        'turn_on_form': turn_on,
+        'new-register-form': newRegisterClickHandler,
+        'register-form': registerClickHandler
     };
-    for (const buttonId in buttonIds) {
-        const button = document.getElementById(buttonId);
-        if (button !== null) {
-            button.addEventListener('click', buttonIds[buttonId]);
+    for (const formId in formIds) {
+        const form = document.getElementById(formId);
+        if (form !== null) {
+            form.addEventListener('submit', formIds[formId].bind(null, form));
         }
     }
-    const buttonClasses = {
-        'token_button': tokenButtonClick
+    const formClasses = {
+        'delete-form': deleteCredential
     };
-    for (const buttonClass in buttonClasses) {
-        const buttons = Array.from(document.getElementsByClassName(buttonClass));
-        buttons.forEach((button) => {
-            button.addEventListener('click', buttonClasses[buttonClass]);
+    for (const formClass in formClasses) {
+        const forms = Array.from(document.getElementsByClassName(formClass));
+        forms.forEach((form) => {
+            form.addEventListener('submit', formClasses[formClass]);
         });
     }
 });
