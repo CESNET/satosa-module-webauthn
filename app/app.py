@@ -48,6 +48,11 @@ if 'reverse_proxy_path' in cfg:
     app.config['REVERSE_PROXY_PATH'] = cfg['reverse_proxy_path']
     ReverseProxyPrefixFix(app)
 
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
+app.config['PREFERRED_URL_SCHEME'] = 'https'
+
 TRUST_ANCHOR_DIR = 'trusted_attestation_roots'
 public_key = RSAKey(key=rsa_load(cfg['caller']['public-key']), use="sig", alg="RS256")
 
