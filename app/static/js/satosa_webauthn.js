@@ -180,6 +180,7 @@ async function webauthn_register(e) {
 }
 
 async function turn_off() {
+    const timeout = this.dataset.timeout;
     const response = await fetch("/turn_off_auth");
     var a = response.clone()
     a.text().then((x) => {
@@ -384,7 +385,8 @@ function delete_credential(cred_id) {
 
 disappeared = false
 
-function disappear(el) {
+function disappear() {
+    const el = this;
     if (!disappeared) {
         disappeared = true
         setTimeout(function () {
@@ -393,17 +395,33 @@ function disappear(el) {
     }
 }
 
+function tokenButtonClick() {
+    delete_credential(this.id);
+}
+
 document.addEventListener("DOMContentLoaded", e => {
-    let buttons = {
+    const buttonIds = {
         'login': didClickLogin,
         'manage': didClickManage,
         'register': didClickRegister,
-        'new_register': didClickNewRegister
-    }
-    for (buttonId in buttons) {
-        let button = document.querySelector('#' + buttonId)
+        'new_register': didClickNewRegister,
+        'register_display_name': disappear,
+        'turn_off_button': turn_off,
+        'turn_on_button': turn_on
+    };
+    for (const buttonId in buttonIds) {
+        const button = document.getElementById(buttonId);
         if (button !== null) {
-            button.addEventListener('click', buttons[buttonId]);
+            button.addEventListener('click', buttonIds[buttonId]);
         }
+    }
+    const buttonClasses = {
+        'token_button': tokenButtonClick
+    };
+    for (const buttonClass in buttonClasses) {
+        const buttons = Array.from(document.getElementsByClassName(buttonClass));
+        buttons.forEach((button) => {
+            button.addEventListener('click', buttonClasses[buttonClass]);
+        });
     }
 });
