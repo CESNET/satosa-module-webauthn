@@ -1,3 +1,26 @@
+body {
+    background-color: #000044;
+    text-align: center;
+}
+
+#registration h1 {
+    margin-top: 80px;
+}
+
+#example-image {
+    width: 200px;
+    margin-top: 30px;
+    opacity: 0.7;
+}
+
+#new_register, #register, #register_display_name {
+    margin-top: 20px;
+}
+
+#login, #manage {
+    width: 200px;
+}
+
 .flash {
     color: #63B246;
 }
@@ -19,7 +42,14 @@ button.form_button:hover {
     cursor: pointer;
 }
 
+h3 {
+    color: #dddddd;
+}
+
 a.logout {
+    position: absolute;
+    right: 5%;
+    top: 5%;
     outline: none;
     color: white;
     background-color: #000044;
@@ -73,6 +103,7 @@ input.form_input:focus, input.form_input:active {
 
 body, h1, h2 {
     font-family: 'Oswald', sans-serif;
+    color: white;
 }
 
 div.box {
@@ -93,4 +124,26 @@ tr.token {
 
 td {
     margin-left: 10px;
+}
+
+#turn_off_button, #turn_on_button {
+    margin-top: 10px;
+}
+
+#credential-list {
+    width: 426px;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+#credential-list td:first-child {
+    width: 276px;
+}
+
+#credential-list td:last-child {
+    width: 150px;
+}
+
+#register-box {
+    margin-top: 8px;
 }
