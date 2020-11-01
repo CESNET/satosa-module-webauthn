@@ -3,21 +3,21 @@
 <script src="{{ url_for('static', filename='js/satosa_webauthn.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
 <title>SATOSA WebAuthn</title>
-<body style="background-color: #000044; text-align: center">
-<h1 style="color: white">SATOSA WebAuthn</h1>
+<body>
+<h1>SATOSA WebAuthn</h1>
 <div class="box">
-    <h2 style="color: white">Log In</h2>
+    <h2>Log In</h2>
     <form id="login-form" name="login" method="get">
         <input name="login_username" value="{{ username1 }}" hidden>
-        <button STYLE="width: 200px" class="form_button" id="login" type="submit">AUTHENTICATE</button>
+        <button class="form_button" id="login" type="submit">AUTHENTICATE</button>
     </form>
     <form id="manage-form" name="manage" method="get">
         <input name="login_username" value="{{ username1 }}" hidden>
-        <button STYLE="width: 200px" class="form_button" id="manage" type="submit">MANAGE TOKENS</button>
+        <button class="form_button" id="manage" type="submit">MANAGE TOKENS</button>
     </form>
 </div>
 <div>
-    <img style="width: 200px; margin-top: 30px; opacity: 0.7" src="{{ url_for('static', filename='yubico.png') }}">
+    <img id="example-image" src="{{ url_for('static', filename='yubico.png') }}">
 </div>
 </body>
 </html>
