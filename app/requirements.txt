@@ -1,5 +1,7 @@
 flask
 flask-login
+flask-reverse-proxy-fix
+Werkzeug<1.0.0
 cbor2
 mysql-connector-python
 pyjwkest
