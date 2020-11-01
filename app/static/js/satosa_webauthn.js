@@ -383,18 +383,6 @@ function delete_credential(cred_id) {
     }, 500)
 }
 
-disappeared = false
-
-function disappear() {
-    const el = this;
-    if (!disappeared) {
-        disappeared = true
-        setTimeout(function () {
-            el.value = ''
-        }, 100)
-    }
-}
-
 function tokenButtonClick() {
     delete_credential(this.id);
 }
@@ -405,7 +393,6 @@ document.addEventListener("DOMContentLoaded", e => {
         'manage': didClickManage,
         'register': didClickRegister,
         'new_register': didClickNewRegister,
-        'register_display_name': disappear,
         'turn_off_button': turn_off,
         'turn_on_button': turn_on
     };
