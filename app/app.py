@@ -29,8 +29,11 @@ from flask_login import current_user
 from flask_reverse_proxy_fix.middleware import ReverseProxyPrefixFix
 
 app = Flask(__name__)
-sk = os.environ.get('FLASK_SECRET_KEY')
-app.secret_key = b'\xb9\xf0\xd7\xbd\xdd\xf7\xa2\xa5h\xdf\xd2E\x88\xc6\x86*H\xf9\xf63#\xfe\xe7\x0cv\xdb_\xbbB\x12yJ\t3C\xd6J\xdc\x1a*'
+
+SECRET_KEY = os.environ.get("SECRET_KEY")
+if not SECRET_KEY:
+    raise ValueError("No SECRET_KEY set for Flask application")
+app.secret_key = SECRET_KEY
 
 login_manager = LoginManager()
 login_manager.init_app(app)
@@ -47,6 +50,11 @@ ORIGIN = cfg['host']['origin']
 if 'reverse_proxy_path' in cfg:
     app.config['REVERSE_PROXY_PATH'] = cfg['reverse_proxy_path']
     ReverseProxyPrefixFix(app)
+
+app.config['SESSION_COOKIE_SECURE'] = True
+app.config['SESSION_COOKIE_HTTPONLY'] = True
+app.config['SESSION_COOKIE_SAMESITE'] = 'Strict'
+app.config['PREFERRED_URL_SCHEME'] = 'https'
 
 TRUST_ANCHOR_DIR = 'trusted_attestation_roots'
 public_key = RSAKey(key=rsa_load(cfg['caller']['public-key']), use="sig", alg="RS256")
