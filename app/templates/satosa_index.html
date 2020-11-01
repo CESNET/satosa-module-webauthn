@@ -2,17 +2,20 @@
 <script src="{{ url_for('static', filename='js/lib/base64.js') }}"></script>
 <script src="{{ url_for('static', filename='js/satosa_webauthn.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+<link rel="next" id="logout-url" href="{{ url_for('logout') }}">
+<link rel="next" id="manage-url" href="{{ url_for('credentials_manager') }}">
+<link rel="next" id="assertion-url" href="{{ url_for('verify_assertion') }}">
 <title>SATOSA WebAuthn</title>
 <body>
 <h1>SATOSA WebAuthn</h1>
 <div class="box">
     <h2>Log In</h2>
-    <form id="login-form" name="login" method="get">
-        <input name="login_username" value="{{ username1 }}" hidden>
+    <form id="login-form" name="login" method="POST" action="{{ url_for('webauthn_begin_assertion') }}">
+        <input name="login_username" value="{{ username1 }}" type="hidden">
         <button class="form_button" id="login" type="submit">AUTHENTICATE</button>
     </form>
-    <form id="manage-form" name="manage" method="get">
-        <input name="login_username" value="{{ username1 }}" hidden>
+    <form id="manage-form" name="manage" method="POST" action="{{ url_for('webauthn_begin_assertion') }}">
+        <input name="login_username" value="{{ username1 }}" type="hidden">
         <button class="form_button" id="manage" type="submit">MANAGE TOKENS</button>
     </form>
 </div>

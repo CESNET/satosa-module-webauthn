@@ -2,14 +2,16 @@
 <script src="{{ url_for('static', filename='js/lib/base64.js') }}"></script>
 <script src="{{ url_for('static', filename='js/satosa_webauthn.js') }}"></script>
 <link rel="stylesheet" href="{{ url_for('static', filename='css/base.css') }}">
+<link rel="next" id="logout-url" href="{{ url_for('logout') }}">
+<link rel="next" id="verify-url" href="{{ url_for('verify_credential_info') }}">
 <title>SATOSA WebAuthn</title>
 
 <body id="registration">
 <h1>SATOSA WebAuthn</h1>
 <div class="box">
     <h2>Token registration</h2>
-    <form id="register-form" name="register" method="get">
-        <input name="register_username" value="{{ username1 }}" hidden>
+    <form id="new-register-form" name="register" method="POST" action="{{ url_for('webauthn_begin_activate') }}">
+        <input name="register_username" value="{{ username1 }}" type="hidden">
         <input class="form_input" name="register_display_name" id="register_display_name" placeholder="Token name"><br>
         <button class="form_button" id="new_register" type="submit">REGISTER</button>
     </form>
