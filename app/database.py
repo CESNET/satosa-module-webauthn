@@ -47,7 +47,7 @@ class Database:
             returned += str(e) + "\n"
         try:
             mycursor.execute(
-                "CREATE TABLE `credential` (`id` int(11) NOT NULL,`ukey` varchar(2083) NOT NULL,`credential_id` varchar(2083) NOT NULL,`display_name` varchar(2083) NOT NULL,`pub_key` varchar(2083) DEFAULT NULL,`sign_count` int(11) DEFAULT NULL,`username` varchar(2083) NOT NULL,`rp_id` varchar(2083) NOT NULL,`icon_url` varchar(2083) NOT NULL,PRIMARY KEY (`id`),UNIQUE KEY `ukey` (`ukey`),UNIQUE KEY `credential_id` (`credential_id`),UNIQUE KEY `pub_key` (`pub_key`))")
+                "CREATE TABLE `credential` (`id` int(11) NOT NULL,`ukey` varchar(2083) NOT NULL,`credential_id` varchar(2083) NOT NULL,`display_name` varchar(2083) NOT NULL,`pub_key` varchar(2083) DEFAULT NULL,`sign_count` int(11) DEFAULT NULL,`username` varchar(2083) NOT NULL,`rp_id` varchar(2083) NOT NULL,`icon_url` varchar(2083),`fmt` varchar(100), `sig` BLOB, `x5c` BLOB,PRIMARY KEY (`id`),KEY `index` (`id`,`ukey`(50),`credential_id`(50),`pub_key`(50)))")
             returned += "Table credential created\n"
         except Exception as e:
             returned += str(e) + "\n"
@@ -142,6 +142,9 @@ class Database:
             credential.username = row["username"]
             credential.rp_id = row["rp_id"]
             credential.icon_url = row["icon_url"]
+            credential.fmt = row["fmt"]
+            credential.x5c = row["x5c"]
+            credential.sig = row["sig"]
             credentials.append(credential)
         return credentials
 
@@ -149,9 +152,10 @@ class Database:
         mydb = self._connect()
         mycursor = mydb.cursor()
         mycursor.execute(
-            "INSERT INTO credential (id, ukey, credential_id, display_name, pub_key, sign_count, username, rp_id, icon_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            "INSERT INTO credential (id, ukey, credential_id, display_name, pub_key, sign_count, username, rp_id, icon_url, fmt, sig, x5c) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)",
             (credential.id, str(credential.ukey), credential.credential_id, credential.display_name, credential.pub_key,
-             credential.sign_count, credential.username, credential.rp_id, credential.icon_url))
+             credential.sign_count, credential.username, credential.rp_id, credential.icon_url, credential.fmt,
+             credential.sig, credential.x5c))
         mydb.commit()
 
     def save_user(self, username):

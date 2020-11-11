@@ -20,6 +20,9 @@ class Credential:
         self.username = None
         self.rp_id = None
         self.icon_url = None
+        self.fmt = None
+        self.x5c = None
+        self.sig = None
 
 
 class Request:

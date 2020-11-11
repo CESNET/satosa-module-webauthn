@@ -23,6 +23,12 @@ host:
   turn-off: True
   #the time until the authentication requiring is turned on again
   turn-off-timeout-seconds: 300
+  #requiring attestation data - must be one of these: {"direct", "indirect", "none"}
+  attestation-data: direct
+  #Is self attestation permitted? {True, False}
+  self_attestation_permitted: True
+  #Is trusted attestation certificate required? {True, False}
+  trusted_attestation_cert_required: False
 
 #responses that are sent back to the calling party according to the result of the authentication
 responses:

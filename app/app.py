@@ -46,6 +46,9 @@ database = Database(cfg)
 RP_ID = cfg['host']['rp-id']
 RP_NAME = 'webauthn'
 ORIGIN = cfg['host']['origin']
+ATTESTATION_DATA = cfg['host'].get('attestation-data', "none")
+SELF_ATTESTATION_PERMITTED = cfg['host'].get('self_attestation_permitted-data', True)
+TRUSTED_ATTESTATION_CERT_REQUIRED = cfg['host'].get('trusted_attestation_cert_required-data', False)
 
 if 'reverse_proxy_path' in cfg:
     app.config['REVERSE_PROXY_PATH'] = cfg['reverse_proxy_path']
@@ -110,7 +113,6 @@ def authentication_request_get(message):
         message = JWS().verify_compact(message, keys=[public_key])
     except BadSignature:
         return "Signature invalid"
-    # todo check whether signed correctly raise BadSignature
     satosa_request = Request(message)
     user = database.get_user(satosa_request.userId)
     if not database.request_exists(satosa_request):
@@ -200,7 +202,7 @@ def webauthn_begin_activate():
 
     make_credential_options = webauthn.WebAuthnMakeCredentialOptions(
         challenge, RP_NAME, RP_ID, ukey, username, display_name,
-        cfg['host']['origin'])
+        cfg['host']['origin'], 60000, ATTESTATION_DATA)
 
     return jsonify(make_credential_options.registration_dict)
 
@@ -221,9 +223,9 @@ def verify_credential_info():
     registration_response = request.form
     trust_anchor_dir = os.path.join(
         os.path.dirname(os.path.abspath(__file__)), TRUST_ANCHOR_DIR)
-    trusted_attestation_cert_required = True
-    self_attestation_permitted = True
-    none_attestation_permitted = True
+    trusted_attestation_cert_required = TRUSTED_ATTESTATION_CERT_REQUIRED
+    self_attestation_permitted = SELF_ATTESTATION_PERMITTED
+    none_attestation_permitted = ATTESTATION_DATA == 'none'
     webauthn_registration_response = webauthn.WebAuthnRegistrationResponse(
         RP_ID,
         ORIGIN,
@@ -263,6 +265,11 @@ def verify_credential_info():
         credential.sign_count = webauthn_credential.sign_count
         credential.rp_id = RP_ID
         credential.icon_url = 'https://example.com'
+        if 'sig' in webauthn_credential.att_stmt:
+            credential.sig = webauthn_credential.att_stmt['sig']
+        if 'x5c' in webauthn_credential.att_stmt and len( webauthn_credential.att_stmt['x5c']) > 0:
+            credential.x5c = webauthn_credential.att_stmt['x5c'][0]
+        credential.fmt = webauthn_credential.fmt
         database.save_credential(credential)
         database.turn_on(credential.username)
     else:
@@ -379,4 +386,5 @@ def turn_on_auth():
 
 
 if __name__ == '__main__':
+    database.create_database() #try creating database in case it was not yet created
     app.run(host= '0.0.0.0', port=80)

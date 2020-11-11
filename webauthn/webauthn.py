@@ -83,7 +83,6 @@ class WebAuthnUserDataMissing(Exception):
 
 
 class WebAuthnMakeCredentialOptions(object):
-
     _attestation_forms = {'none', 'indirect', 'direct'}
     _user_verification = {'required', 'preferred', 'discouraged'}
 
@@ -234,12 +233,14 @@ class WebAuthnUser(object):
 
 
 class WebAuthnCredential(object):
-    def __init__(self, rp_id, origin, credential_id, public_key, sign_count):
+    def __init__(self, rp_id, origin, credential_id, public_key, sign_count, att_stmt=None, fmt=None):
         self.rp_id = rp_id
         self.origin = origin
         self.credential_id = credential_id
         self.public_key = public_key
         self.sign_count = sign_count
+        self.att_stmt = att_stmt
+        self.fmt = fmt
 
     def __str__(self):
         return '{} ({}, {}, {})'.format(self.credential_id, self.rp_id,
@@ -835,7 +836,7 @@ class WebAuthnRegistrationResponse(object):
 
             credential = WebAuthnCredential(
                 self.rp_id, self.origin, _webauthn_b64_encode(cred_id),
-                _webauthn_b64_encode(credential_public_key), sign_count)
+                _webauthn_b64_encode(credential_public_key), sign_count, att_stmt, fmt)
 
             return credential
 
@@ -1079,10 +1080,9 @@ class WebAuthnAssertionResponse(object):
             #             or not, is Relying Party-specific.
             sc = decoded_a_data[33:37]
             sign_count = struct.unpack('!I', sc)[0]
-            
             if sign_count == 0 and self.webauthn_user.sign_count == 0:
                 return 0
-            
+
             if not sign_count:
                 raise AuthenticationRejectedException('Unable to parse sign_count.')
 
