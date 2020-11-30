@@ -47,7 +47,7 @@ class Database:
             returned += str(e) + "\n"
         try:
             mycursor.execute(
-                "CREATE TABLE `credential` (`id` int(11) NOT NULL,`ukey` varchar(2083) NOT NULL,`credential_id` varchar(2083) NOT NULL,`display_name` varchar(2083) NOT NULL,`pub_key` varchar(2083) DEFAULT NULL,`sign_count` int(11) DEFAULT NULL,`username` varchar(2083) NOT NULL,`rp_id` varchar(2083) NOT NULL,`icon_url` varchar(2083) NOT NULL,PRIMARY KEY (`id`),UNIQUE KEY `ukey` (`ukey`),UNIQUE KEY `credential_id` (`credential_id`),UNIQUE KEY `pub_key` (`pub_key`))")
+                "CREATE TABLE `credential` (`id` int(11) NOT NULL,`ukey` varchar(2083) NOT NULL,`credential_id` varchar(2083) NOT NULL,`display_name` varchar(2083) NOT NULL,`pub_key` varchar(2083) DEFAULT NULL,`sign_count` int(11) DEFAULT NULL,`username` varchar(2083) NOT NULL,`rp_id` varchar(2083) NOT NULL, PRIMARY KEY (`id`),UNIQUE KEY `ukey` (`ukey`),UNIQUE KEY `credential_id` (`credential_id`),UNIQUE KEY `pub_key` (`pub_key`))")
             returned += "Table credential created\n"
         except Exception as e:
             returned += str(e) + "\n"
@@ -126,7 +126,6 @@ class Database:
             credential.sign_count = row["sign_count"]
             credential.username = row["username"]
             credential.rp_id = row["rp_id"]
-            credential.icon_url = row["icon_url"]
         return credential
 
     def _parse_credentials(self, data):
@@ -141,7 +140,6 @@ class Database:
             credential.sign_count = row["sign_count"]
             credential.username = row["username"]
             credential.rp_id = row["rp_id"]
-            credential.icon_url = row["icon_url"]
             credentials.append(credential)
         return credentials
 
@@ -149,9 +147,9 @@ class Database:
         mydb = self._connect()
         mycursor = mydb.cursor()
         mycursor.execute(
-            "INSERT INTO credential (id, ukey, credential_id, display_name, pub_key, sign_count, username, rp_id, icon_url) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)",
+            "INSERT INTO credential (id, ukey, credential_id, display_name, pub_key, sign_count, username, rp_id) VALUES (%s, %s, %s, %s, %s, %s, %s, %s)",
             (credential.id, str(credential.ukey), credential.credential_id, credential.display_name, credential.pub_key,
-             credential.sign_count, credential.username, credential.rp_id, credential.icon_url))
+             credential.sign_count, credential.username, credential.rp_id))
         mydb.commit()
 
     def save_user(self, username):

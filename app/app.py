@@ -262,7 +262,6 @@ def verify_credential_info():
         credential.credential_id = webauthn_credential.credential_id
         credential.sign_count = webauthn_credential.sign_count
         credential.rp_id = RP_ID
-        credential.icon_url = 'https://example.com'
         database.save_credential(credential)
         database.turn_on(credential.username)
     else:
@@ -297,7 +296,7 @@ def webauthn_begin_assertion():
     webauthn_users = []
     for credential in credentials:
         webauthn_users.append(webauthn.WebAuthnUser(
-            credential.ukey, credential.username, credential.display_name, credential.icon_url,
+            credential.ukey, credential.username, credential.display_name, None,
             credential.credential_id, credential.pub_key, credential.sign_count, credential.rp_id))
     webauthn_assertion_options = webauthn.WebAuthnAssertionOptions(
         webauthn_users, challenge)
@@ -318,7 +317,7 @@ def verify_assertion():
         return make_response(jsonify({'fail': 'User does not exist.'}), 401)
 
     webauthn_user = webauthn.WebAuthnUser(
-        credential.ukey, credential.username, credential.display_name, credential.icon_url,
+        credential.ukey, credential.username, credential.display_name, None,
         credential.credential_id, credential.pub_key, credential.sign_count, credential.rp_id)
 
     webauthn_assertion_response = webauthn.WebAuthnAssertionResponse(

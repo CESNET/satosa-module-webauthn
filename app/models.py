@@ -19,7 +19,6 @@ class Credential:
         self.sign_count = None
         self.username = None
         self.rp_id = None
-        self.icon_url = None
 
 
 class Request:
