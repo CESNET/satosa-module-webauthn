@@ -117,17 +117,19 @@ def authentication_request_get(message):
         database.save_request(satosa_request)
     else:
         return "REPLAY ATTACK"
+    
+    api_url = cfg['caller']['callback-url'] + "?StateId=" + satosa_request.nonce
     if not user:
         database.save_user(satosa_request.userId)
         new_user = database.get_user(satosa_request.userId)
         login_user(new_user)
         return render_template('satosa_registration_index.html', username1=satosa_request.userId,
-                               redirect_url1=cfg['caller']['callback-url'])
+                               redirect_url1=api_url)
     if len(database.get_credentials(satosa_request.userId)) == 0:
         new_user = database.get_user(satosa_request.userId)
         login_user(new_user)
         return render_template('satosa_registration_index.html', username1=satosa_request.userId,
-                               redirect_url1=cfg['caller']['callback-url'])
+                               redirect_url1=api_url)
 
     if cfg['host']['turn-off'] and database.is_turned_off(user.id):
         database.turn_on(user.id)
@@ -140,7 +142,7 @@ def authentication_request_get(message):
         return render_template("credentials.html", credentials=credentials_array, username1=username, url=ORIGIN,
                                turn_off=cfg['host']['turn-off'], timeout=int(cfg['host']['turn-off-timeout-seconds']))
     return render_template('satosa_index.html', username1=satosa_request.userId,
-                           redirect_url1=cfg['caller']['callback-url'])
+                           redirect_url1=api_url)
 
 
 @app.route('/request/<message>')
@@ -350,8 +352,9 @@ def verify_assertion():
 @app.route('/logout')
 @login_required
 def logout():
+    request = database.get_request_by_user_id(current_user.id)
     logout_user()
-    return redirect(cfg['caller']['callback-url'])
+    return redirect(cfg['caller']['callback-url'] + "?StateId=" + request.nonce)
 
 
 @app.route('/turn_off_auth')
