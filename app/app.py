@@ -21,6 +21,7 @@ from database import Database
 import yaml
 import json
 import time
+import urllib
 from flask_login import LoginManager
 from flask_login import login_required
 from flask_login import login_user
@@ -118,7 +119,7 @@ def authentication_request_get(message):
     else:
         return "REPLAY ATTACK"
     
-    api_url = cfg['caller']['callback-url'] + "?StateId=" + satosa_request.nonce
+    api_url = cfg['caller']['callback-url'] + "?StateId=" + urllib.urlencode(satosa_request.nonce)
     if not user:
         database.save_user(satosa_request.userId)
         new_user = database.get_user(satosa_request.userId)
@@ -354,7 +355,7 @@ def verify_assertion():
 def logout():
     request = database.get_request_by_user_id(current_user.id)
     logout_user()
-    return redirect(cfg['caller']['callback-url'] + "?StateId=" + request.nonce)
+    return redirect(cfg['caller']['callback-url'] + "?StateId=" + urllib.urlencode(request.nonce))
 
 
 @app.route('/turn_off_auth')
