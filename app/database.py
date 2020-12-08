@@ -53,7 +53,7 @@ class Database:
             returned += str(e) + "\n"
         try:
             mycursor.execute(
-                "CREATE TABLE `request` (`id` int(11) NOT NULL AUTO_INCREMENT,`nonce` varchar(255) DEFAULT NULL,`time` varchar(255) DEFAULT NULL,`user_id` varchar(255) DEFAULT NULL,`success` int(11) DEFAULT NULL,PRIMARY KEY (`id`),UNIQUE KEY `nonce` (`nonce`))")
+                "CREATE TABLE `request` (`id` int(11) NOT NULL AUTO_INCREMENT,`nonce` varchar(400) DEFAULT NULL,`time` varchar(255) DEFAULT NULL,`user_id` varchar(255) DEFAULT NULL,`success` int(11) DEFAULT NULL,PRIMARY KEY (`id`),UNIQUE KEY `nonce` (`nonce`))")
             returned += "Table request created\n"
         except Exception as e:
             returned += str(e) + "\n"
@@ -187,6 +187,15 @@ class Database:
         mydb = self._connect()
         mycursor = mydb.cursor(dictionary=True)
         mycursor.execute("SELECT * FROM request WHERE nonce = %s ORDER BY `id` DESC LIMIT 1", (nonce,))
+        rows = mycursor.fetchall()
+        if mycursor.rowcount > 0:
+            return self._parse_request(rows)
+        return False
+
+    def get_request_by_user_id(self, user_id):
+        mydb = self._connect()
+        mycursor = mydb.cursor(dictionary=True)
+        mycursor.execute("SELECT * FROM request WHERE user_id = %s ORDER BY `id` DESC LIMIT 1", (user_id,))
         rows = mycursor.fetchall()
         if mycursor.rowcount > 0:
             return self._parse_request(rows)
